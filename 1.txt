@@ -1,0 +1,15 @@
+Presolve removed 44 rows and 44 columns
+Presolve time: 0.01s
+Presolved: 4721 rows, 2690 columns, 14223 nonzeros
+Presolved model has 380 quadratic objective terms
+Presolved model has 190 quadratic constraint(s)
+Presolved model has 1954 bilinear constraint(s)
+Variable types: 2690 continuous, 0 integer (0 binary)
+
+Presolve removed 41 rows and 41 columns
+Presolve time: 0.01s
+Presolved: 4739 rows, 2699 columns, 14434 nonzeros
+Presolved model has 380 quadratic objective terms
+Presolved model has 190 quadratic constraint(s)
+Presolved model has 1960 bilinear constraint(s)
+Variable types: 2699 continuous, 0 integer (0 binary)
