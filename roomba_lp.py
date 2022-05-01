@@ -27,16 +27,16 @@ class Roomba:
         self.speed = speed
         sqrspeed = self.speed**2
 
-        self.pos_x_vars = m.addMVar(steps, lb = half_roomba_width, ub = grid_width - half_roomba_width, vtype = GRB.CONTINUOUS)
-        self.pos_y_vars = m.addMVar(steps, lb = half_roomba_width, ub = grid_height - half_roomba_width, vtype = GRB.CONTINUOUS)
-        self.mov_x_vars = m.addMVar(steps - 1, lb = -speed, ub = speed, vtype = GRB.CONTINUOUS)
-        self.mov_y_vars = m.addMVar(steps - 1, lb = -speed, ub = speed, vtype = GRB.CONTINUOUS)
+        self.pos_x_vars = m.addVars(steps, lb = float(half_roomba_width), ub = float(grid_width - half_roomba_width))
+        self.pos_y_vars = m.addVars(steps, lb = float(half_roomba_width), ub = float(grid_height - half_roomba_width))
+        self.mov_x_vars = m.addVars(steps - 1, lb = -speed, ub = speed)
+        self.mov_y_vars = m.addVars(steps - 1, lb = -speed, ub = speed)
 
         # add start and end positions
-        m.addConstr(self.pos_x_vars[0] == p_start[0])
-        m.addConstr(self.pos_y_vars[0] == p_start[1])
-        m.addConstr(self.pos_x_vars[steps - 1] == p_target[0])
-        m.addConstr(self.pos_y_vars[steps - 1] == p_target[1])
+        m.addConstr(self.pos_x_vars[0] == float(p_start[0]))
+        m.addConstr(self.pos_y_vars[0] == float(p_start[1]))
+        m.addConstr(self.pos_x_vars[steps - 1] == float(p_target[0]))
+        m.addConstr(self.pos_y_vars[steps - 1] == float(p_target[1]))
 
         # add movement constraints
         for n in range(1, steps):

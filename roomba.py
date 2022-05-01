@@ -10,7 +10,7 @@ grid_width = 100
 grid_height = 100
 roomba_width = 16
 half_roomba_width = roomba_width//2
-steps = 15
+steps = 10
 
 def distance(p1, p2):
     return sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
@@ -50,7 +50,7 @@ class Roomba:
 roombas = list()
 grid_points = [(x, y) for x in range(half_roomba_width, grid_width, roomba_width) for y in range(half_roomba_width, grid_height, roomba_width)]
 
-for _ in range(8):
+for _ in range(10):
     start = grid_points.pop(randrange(0, len(grid_points)))
     target = grid_points.pop(randrange(0, len(grid_points)))
     roombas.append(Roomba(start, target))
