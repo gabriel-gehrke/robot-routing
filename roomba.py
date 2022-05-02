@@ -10,7 +10,7 @@ grid_width = 100
 grid_height = 100
 roomba_width = 16
 half_roomba_width = roomba_width//2
-steps = 10
+steps = 12
 
 def distance(p1, p2):
     return sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
@@ -50,13 +50,14 @@ class Roomba:
 roombas = list()
 grid_points = [(x, y) for x in range(half_roomba_width, grid_width, roomba_width) for y in range(half_roomba_width, grid_height, roomba_width)]
 
-for _ in range(10):
+for _ in range(8):
     start = grid_points.pop(randrange(0, len(grid_points)))
     target = grid_points.pop(randrange(0, len(grid_points)))
     roombas.append(Roomba(start, target))
 
 # Collision-Avoidance Terms
 for r1, r2 in combinations(roombas, 2):
+    print("AAA")
     for n in range(steps):
         dx = r1.pos_x_vars[n] - r2.pos_x_vars[n]
         dy = r1.pos_y_vars[n] - r2.pos_y_vars[n]
@@ -84,8 +85,6 @@ axes.set_xlim((0, grid_width))
 axes.set_ylim((0, grid_height))
 axes.set_aspect(grid_width / grid_height)
 
-circles = list()
-arrows = list()
 for r in roombas:
     color = tuple(random() for _ in range(3))
     movv = [(r.mov_x_vars[i].x, r.mov_y_vars[i].x) for i in range(steps - 1)]
@@ -93,16 +92,13 @@ for r in roombas:
 
     for i, (x, y) in enumerate(posv):
         # circle
-        circles.append(plt.Circle((x, y), radius=half_roomba_width, color=color, fill=False))
+        axes.add_artist(plt.Circle((x, y), radius=half_roomba_width, color=color, fill=False))
         # arrow
         if i < steps - 1:
             (dx, dy) = movv[i]
-            arrows.append(plt.arrow(x, y, dx, dy, width=0.1, head_width=2, color=color, shape="full"))
+            plt.arrow(x, y, dx, dy, width=0.1, head_width=2, color=color, shape="full", length_includes_head=True)
 
     paths.append(posv)
-
-for artist in chain(circles, arrows):
-    axes.add_artist(artist)
 
 with open("paths.json", "w") as f:
         json.dump(paths, f)

@@ -25,7 +25,6 @@ class Roomba:
         self.p_start = p_start
         self.p_target = p_target
         self.speed = speed
-        sqrspeed = self.speed**2
 
         self.pos_x_vars = m.addVars(steps, lb = float(half_roomba_width), ub = float(grid_width - half_roomba_width))
         self.pos_y_vars = m.addVars(steps, lb = float(half_roomba_width), ub = float(grid_height - half_roomba_width))
@@ -53,29 +52,31 @@ for _ in range(2):
     roombas.append(Roomba(start, target))
 
 # Collision-Avoidance Terms
-non_abses = list()
-abses = list()
 for r1, r2 in combinations(roombas, 2):
-    for n in range(steps):
+    for n in range(1, steps - 1):
         # model distance along x and y axis
-        dx = m.addVar(lb = -grid_width, ub = grid_width)
-        dy = m.addVar(lb = -grid_height, ub = grid_height)
-        m.addConstr(dx == r1.pos_x_vars[n] - r2.pos_x_vars[n])
-        m.addConstr(dy == r1.pos_y_vars[n] - r2.pos_y_vars[n])
-        non_abses.append(dx)
-        non_abses.append(dy)
+        x1 = r1.pos_x_vars[n]
+        x2 = r2.pos_x_vars[n]
+        y1 = r1.pos_y_vars[n]
+        y2 = r2.pos_y_vars[n]
+        dx = x1 - x2
+        dy = y1 - y2
 
-        # model absolute distance
-        absdist_x = m.addVar()
-        absdist_y = m.addVar()
-        abses.append(absdist_x)
-        abses.append(absdist_y)
-        m.addConstr(absdist_x == gp.abs_(dx))
-        m.addConstr(absdist_y == gp.abs_(dy))
-        
-        # avoid collision
-        m.addConstr(absdist_x >= roomba_width)
-        m.addConstr(absdist_y >= roomba_width)
+        # dummy variables (binary)
+        a = m.addVar(vtype = GRB.BINARY)
+        b = m.addVar(vtype = GRB.BINARY)
+        c = m.addVar(vtype = GRB.BINARY)
+        d = m.addVar(vtype = GRB.BINARY)
+
+        # x distance
+        m.addConstr((a == 1) >> (dx <= -roomba_width))
+        m.addConstr((b == 1) >> (dx >= roomba_width))
+        m.addConstr(a + b == 1) # xor
+
+        # y distance
+        m.addConstr((c == 1) >> (dy <= -roomba_width))
+        m.addConstr((d == 1) >> (dy >= roomba_width))
+        m.addConstr(c + d == 1) #xor
 
 m.setParam('Threads', 12)
 #m.setParam('NonConvex', 2)
@@ -114,6 +115,3 @@ for r in roombas:
 with open("paths.json", "w") as f:
         json.dump(paths, f)
 plt.savefig("out.png")
-
-print([a.x for a in non_abses])
-print([a.x for a in abses])
