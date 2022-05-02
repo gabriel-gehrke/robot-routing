@@ -15,7 +15,7 @@ grid_width = 100
 grid_height = 100
 roomba_width = 16
 half_roomba_width = roomba_width//2
-steps = 15
+steps = 30
 
 # Create a new model
 m = gp.Model("Collision-Avoiding Robot Guidance")
@@ -42,11 +42,17 @@ class Roomba:
             m.addConstr(self.pos_x_vars[n] == self.pos_x_vars[n-1] + self.mov_x_vars[n-1])
             m.addConstr(self.pos_y_vars[n] == self.pos_y_vars[n-1] + self.mov_y_vars[n-1])
 
+    def extract_positions(self):
+        return [(round(self.pos_x_vars[i].x, 2), round(self.pos_y_vars[i].x, 2)) for i in range(steps)]
+    
+    def extract_movements(self):
+        return [(self.mov_x_vars[i].x, self.mov_y_vars[i].x) for i in range(steps - 1)]
+
 # Create Roombas
 roombas = list()
 grid_points = [(x, y) for x in range(half_roomba_width, grid_width, roomba_width) for y in range(half_roomba_width, grid_height, roomba_width)]
 
-for _ in range(2):
+for _ in range(14):
     start = grid_points.pop(randrange(0, len(grid_points)))
     target = grid_points.pop(randrange(0, len(grid_points)))
     roombas.append(Roomba(start, target))
@@ -71,12 +77,13 @@ for r1, r2 in combinations(roombas, 2):
         # x distance
         m.addConstr((a == 1) >> (dx <= -roomba_width))
         m.addConstr((b == 1) >> (dx >= roomba_width))
-        m.addConstr(a + b == 1) # xor
 
         # y distance
         m.addConstr((c == 1) >> (dy <= -roomba_width))
         m.addConstr((d == 1) >> (dy >= roomba_width))
-        m.addConstr(c + d == 1) #xor
+
+        # min distance must be given in at least one direction
+        m.addConstr(a + b + c + d >= 1)
 
 m.setParam('Threads', 12)
 #m.setParam('NonConvex', 2)
@@ -99,8 +106,17 @@ axes.set_aspect(grid_width / grid_height)
 
 for r in roombas:
     color = tuple(random() for _ in range(3))
-    movv = [(r.mov_x_vars[i].x, r.mov_y_vars[i].x) for i in range(steps - 1)]
-    posv = [(r.pos_x_vars[i].x, r.pos_y_vars[i].x) for i in range(steps)]
+    movv = r.extract_movements()
+    posv = r.extract_positions()
+    assert posv[0] == r.p_start
+    assert posv[-1] == r.p_target
+
+    # no-collision assertions
+    for r2 in roombas:
+        if r == r2: continue
+        for ((x1, y1), (x2, y2)) in zip(posv, r2.extract_positions()):
+            #print(f"dx = {abs(x1 - x2)}, dy = {abs(y1 - y2)}")
+            assert abs(x1 - x2) >= roomba_width or abs(y1 - y2) >= roomba_width
 
     for i, (x, y) in enumerate(posv):
         # rect
@@ -108,7 +124,7 @@ for r in roombas:
         # arrow
         if i < steps - 1:
             (dx, dy) = movv[i]
-            plt.arrow(x, y, dx, dy, width=0.1, head_width=2, color=color, shape="full")
+            plt.arrow(x, y, dx, dy, width=0.1, head_width=2, color=color, shape="full", length_includes_head=True)
 
     paths.append(posv)
 
